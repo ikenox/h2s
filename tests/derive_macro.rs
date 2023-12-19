@@ -210,6 +210,51 @@ fn struct_unnamed() {
 }
 
 #[test]
+fn optional_attribute() {
+    #[derive(FromHtml, Debug, Eq, PartialEq)]
+    pub struct Struct {
+        #[h2s(attr = "lang")]
+        lang: Option<String>,
+        #[h2s(attr = "prefix")]
+        prefix: Option<String>,
+        #[h2s(select = ".a", attr = "class")]
+        a_class: Option<String>,
+        #[h2s(select = ".a", attr = "style")]
+        a_style: Option<String>,
+
+        // list of optional attribute
+        #[h2s(select = ".b", attr = "style")]
+        b: Vec<Option<String>>,
+    }
+
+    let html = r#"
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<div class="a"></div>
+
+<div class="b" style="foo"></div>
+<div class="b" ></div>
+<div class="b" style="bar"></div>
+</body>
+</html>
+    "#;
+
+    let res = h2s::parse::<Struct>(html);
+
+    assert_eq!(
+        res.unwrap(),
+        Struct {
+            lang: Some(s("en")),
+            prefix: None,
+            a_class: Some(s("a")),
+            a_style: None,
+            b: vec![Some(s("foo")), None, Some(s("bar")),],
+        }
+    )
+}
+
+#[test]
 #[ignore]
 fn invalid_macro_attribute_combination() {
     // TODO
